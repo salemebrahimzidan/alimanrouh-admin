@@ -33,3 +33,13 @@ export async function deleteUser(id: string) {
   const { data } = await api.delete(`/users/${id}`);
   return data;
 }
+export type UpdateUserPayload = {
+  name: string;
+  email: string;
+  role: UserRole;
+};
+
+export async function updateUser(id: string, payload: UpdateUserPayload) {
+  const { data } = await api.patch<UserItem>(`/users/${id}`, payload);
+  return data;
+}

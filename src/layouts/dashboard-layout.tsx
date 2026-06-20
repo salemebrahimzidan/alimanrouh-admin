@@ -6,7 +6,7 @@ import {
   Package,
   Users,
 } from 'lucide-react';
-
+import SettingsPage from '../modules/settings/settings-page';
 import BookingsPage from '../modules/bookings/bookings-page';
 import { useDashboard } from '../modules/dashboard/hooks/use-dashboard';
 import PackagesPage from '../modules/packages/packages-page';
@@ -169,6 +169,7 @@ export default function DashboardLayout() {
           {activePage === 'bookings' && <BookingsPage />}
           {activePage === 'messages' && <MessagesPage />}
           {activePage === 'users' && <UsersPage />}
+          {activePage === 'settings' && <SettingsPage />}
         </main>
       </div>
     </div>
