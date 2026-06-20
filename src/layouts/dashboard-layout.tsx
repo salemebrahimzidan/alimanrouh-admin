@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MessagesPage from '../modules/messages/messages-page';
 import {
   CalendarCheck,
   Mail,
@@ -11,6 +12,7 @@ import { useDashboard } from '../modules/dashboard/hooks/use-dashboard';
 import PackagesPage from '../modules/packages/packages-page';
 import Header from './header';
 import Sidebar from './sidebar';
+import UsersPage from '../modules/users/users-page';
 
 type Page =
   | 'dashboard'
@@ -165,8 +167,8 @@ export default function DashboardLayout() {
           {activePage === 'dashboard' && <DashboardHome />}
           {activePage === 'packages' && <PackagesPage />}
           {activePage === 'bookings' && <BookingsPage />}
-
-      
+          {activePage === 'messages' && <MessagesPage />}
+          {activePage === 'users' && <UsersPage />}
         </main>
       </div>
     </div>
