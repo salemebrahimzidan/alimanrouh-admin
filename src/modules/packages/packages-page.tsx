@@ -1,17 +1,118 @@
-import { Search } from 'lucide-react';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import {
+  createPackage,
+  deletePackage,
+  updatePackage,
+} from './api/packages.api';
+import type { PackageItem } from './api/packages.api';
+import DeletePackageDialog from './components/delete-package-dialog';
+import PackageForm from './components/package-form';
 import { usePackages } from './hooks/use-packages';
+import type { PackageFormValues } from './types';
 
 export default function PackagesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [packageToDelete, setPackageToDelete] =
+    useState<PackageItem | null>(null);
+    const [packageToEdit, setPackageToEdit] =
+  useState<PackageItem | null>(null);
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = usePackages({
     page,
     limit: 10,
     search: search || undefined,
   });
+
+  const createMutation = useMutation({
+    mutationFn: createPackage,
+    onSuccess: () => {
+      toast.success('Package created successfully');
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      setIsCreateOpen(false);
+    },
+    onError: () => {
+      toast.error('Failed to create package');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deletePackage,
+    onSuccess: () => {
+      toast.success('Package deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      setPackageToDelete(null);
+    },
+    onError: () => {
+      toast.error('Failed to delete package');
+    },
+  });
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: string;
+      values: PackageFormValues;
+    }) =>
+      updatePackage(id, {
+        title: values.title,
+        description: values.description,
+        price: values.price,
+        duration: values.duration,
+        isActive: values.isActive,
+      }),
+    onSuccess: () => {
+      toast.success('Package updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      setPackageToEdit(null);
+    },
+    onError: () => {
+      toast.error('Failed to update package');
+    },
+  });
+  function handleCreatePackage(values: PackageFormValues) {
+    const formData = new FormData();
+
+    formData.append('title', values.title);
+    formData.append('description', values.description);
+    formData.append('price', String(values.price));
+
+    if (values.duration) {
+      formData.append('duration', String(values.duration));
+    }
+
+    formData.append('isActive', String(values.isActive));
+
+    if (values.image) {
+      formData.append('file', values.image);
+    }
+
+    createMutation.mutate(formData);
+  }
+  function handleUpdatePackage(values: PackageFormValues) {
+    if (!packageToEdit) return;
+  
+    updateMutation.mutate({
+      id: packageToEdit.id,
+      values,
+    });
+  }
+
+  function getImageUrl(path?: string | null) {
+    if (!path) return '';
+
+    if (path.startsWith('http')) return path;
+
+    return `https://alimanrouh-api-production.up.railway.app${path}`;
+  }
 
   return (
     <div>
@@ -23,7 +124,10 @@ export default function PackagesPage() {
           </p>
         </div>
 
-        <button className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 hover:bg-emerald-400">
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
+        >
           + Add Package
         </button>
       </div>
@@ -63,7 +167,10 @@ export default function PackagesPage() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
+                <td
+                  colSpan={6}
+                  className="px-6 py-10 text-center text-slate-400"
+                >
                   Loading packages...
                 </td>
               </tr>
@@ -71,7 +178,10 @@ export default function PackagesPage() {
 
             {isError && (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-red-400">
+                <td
+                  colSpan={6}
+                  className="px-6 py-10 text-center text-red-400"
+                >
                   Failed to load packages.
                 </td>
               </tr>
@@ -86,11 +196,7 @@ export default function PackagesPage() {
                   <td className="px-6 py-4">
                     {item.imageUrl ? (
                       <img
-                        src={
-                          item.imageUrl.startsWith('http')
-                            ? item.imageUrl
-                            : `https://alimanrouh-api-production.up.railway.app${item.imageUrl}`
-                        }
+                        src={getImageUrl(item.imageUrl)}
                         alt={item.title}
                         className="h-14 w-20 rounded-lg object-cover"
                       />
@@ -124,11 +230,18 @@ export default function PackagesPage() {
                   </td>
 
                   <td className="px-6 py-4 text-right">
-                    <button className="mr-3 text-emerald-400 hover:text-emerald-300">
-                      Edit
+                  <button
+  onClick={() => setPackageToEdit(item)}
+  className="mr-3 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+>
+                      <Pencil size={18} />
                     </button>
-                    <button className="text-red-400 hover:text-red-300">
-                      Delete
+
+                    <button
+                      onClick={() => setPackageToDelete(item)}
+                      className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                    >
+                      <Trash2 size={18} />
                     </button>
                   </td>
                 </tr>
@@ -136,7 +249,10 @@ export default function PackagesPage() {
 
             {!isLoading && data?.data?.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
+                <td
+                  colSpan={6}
+                  className="px-6 py-10 text-center text-slate-400"
+                >
                   No packages found.
                 </td>
               </tr>
@@ -147,7 +263,8 @@ export default function PackagesPage() {
 
       <div className="mt-6 flex items-center justify-between text-slate-400">
         <p>
-          Page {data?.meta?.page ?? page} of {data?.meta?.totalPages ?? 1}
+          Page {data?.meta?.page ?? page} of{' '}
+          {data?.meta?.totalPages ?? 1}
         </p>
 
         <div className="flex gap-3">
@@ -168,6 +285,52 @@ export default function PackagesPage() {
           </button>
         </div>
       </div>
+
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h3 className="text-xl font-bold text-white">Add Package</h3>
+
+            <PackageForm
+              onCancel={() => setIsCreateOpen(false)}
+              onSubmit={handleCreatePackage}
+              isSubmitting={createMutation.isPending}
+            />
+          </div>
+        </div>
+      )}
+      {packageToEdit && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+    <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <h3 className="text-xl font-bold text-white">Edit Package</h3>
+
+      <PackageForm
+        initialValues={{
+          title: packageToEdit.title,
+          description: packageToEdit.description,
+          price: Number(packageToEdit.price),
+          duration: packageToEdit.duration ?? undefined,
+          isActive: packageToEdit.isActive,
+        }}
+        submitLabel="Update Package"
+        onCancel={() => setPackageToEdit(null)}
+        onSubmit={handleUpdatePackage}
+        isSubmitting={updateMutation.isPending}
+      />
+    </div>
+  </div>
+)}
+
+      <DeletePackageDialog
+        packageItem={packageToDelete}
+        isDeleting={deleteMutation.isPending}
+        onClose={() => setPackageToDelete(null)}
+        onConfirm={() => {
+          if (packageToDelete) {
+            deleteMutation.mutate(packageToDelete.id);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   Users,
 } from 'lucide-react';
 
+import BookingsPage from '../modules/bookings/bookings-page';
 import { useDashboard } from '../modules/dashboard/hooks/use-dashboard';
 import PackagesPage from '../modules/packages/packages-page';
 import Header from './header';
@@ -163,11 +164,9 @@ export default function DashboardLayout() {
         <main className="flex-1 p-8">
           {activePage === 'dashboard' && <DashboardHome />}
           {activePage === 'packages' && <PackagesPage />}
-          {activePage !== 'dashboard' && activePage !== 'packages' && (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-slate-400">
-              {activePage} page coming soon.
-            </div>
-          )}
+          {activePage === 'bookings' && <BookingsPage />}
+
+      
         </main>
       </div>
     </div>
