@@ -5,7 +5,9 @@ import { api } from '../../services/api';
 import { useAuthStore } from '../../store/auth.store';
 
 type LoginResponse = {
-  accessToken: string;
+  accessToken?: string;
+  access_token?: string;
+  token?: string;
   user: {
     id: string;
     name: string;
@@ -32,7 +34,21 @@ export function LoginPage() {
         password,
       });
 
-      login(data.accessToken, data.user);
+      console.log(data);
+
+      const token =
+        data.accessToken ||
+        data.access_token ||
+        data.token;
+      
+      console.log('TOKEN =', token);
+      
+      if (!token) {
+        toast.error('Token not found');
+        return;
+      }
+      
+      login(token, data.user);
       toast.success('Logged in successfully');
     } catch {
       toast.error('Invalid email or password');

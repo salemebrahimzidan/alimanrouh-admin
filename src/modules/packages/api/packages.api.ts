@@ -35,3 +35,29 @@ export async function getPackages(params: {
 
   return data;
 }
+export async function createPackage(formData: FormData) {
+  const { data } = await api.post('/packages', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return data;
+}
+export async function deletePackage(id: string) {
+  const { data } = await api.delete(`/packages/${id}`);
+  return data;
+}
+export async function updatePackage(
+  id: string,
+  data: {
+    title: string;
+    description: string;
+    price: number;
+    duration?: number;
+    isActive: boolean;
+  },
+) {
+  const response = await api.patch(`/packages/${id}`, data);
+  return response.data;
+}
