@@ -71,7 +71,7 @@ export default function PackageForm({
         }
       />
 
-      <input
+      {/* <input
         type="file"
         accept="image/*"
         className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
@@ -81,7 +81,7 @@ export default function PackageForm({
             image: e.target.files?.[0] ?? null,
           })
         }
-      />
+      /> */}
 
       <label className="flex items-center gap-3 text-slate-300">
         <input
