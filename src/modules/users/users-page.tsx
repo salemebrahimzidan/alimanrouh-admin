@@ -1,10 +1,11 @@
-import { Pencil, Trash2, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Trash2, UserPlus, Users, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { DataTable } from '../../components/data-table';
 import DeleteUserDialog from './components/delete-user-dialog';
+import UserForm from './components/user-form';
 import {
   createUser,
   deleteUser,
@@ -12,9 +13,53 @@ import {
   type CreateUserPayload,
   type UpdateUserPayload,
   type UserItem,
-  type UserRole,
 } from './api/users.api';
 import { useUsers } from './hooks/use-users';
+
+type UserModalProps = {
+  title: string;
+  subtitle: string;
+  onClose: () => void;
+  children: ReactNode;
+};
+
+function UserModal({ title, subtitle, onClose, children }: UserModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="Close dialog"
+      />
+
+      <div className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-slate-800 bg-slate-900 shadow-2xl sm:max-w-xl sm:rounded-2xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-800 bg-slate-900 px-5 py-5 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-400">
+              <Users size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white sm:text-xl">{title}</h3>
+              <p className="mt-0.5 text-sm text-slate-400">{subtitle}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -117,15 +162,17 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-white">Users</h2>
-          <p className="mt-2 text-slate-400">Manage admin users.</p>
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between lg:items-center">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-bold text-white sm:text-3xl">Users</h2>
+          <p className="mt-1 text-sm text-slate-400 sm:mt-2 sm:text-base">
+            Manage admin users.
+          </p>
         </div>
 
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-400 sm:w-auto sm:text-base"
         >
           <UserPlus size={18} />
           Add User
@@ -194,6 +241,7 @@ export default function UsersPage() {
                   <button
                     onClick={() => openEdit(user)}
                     className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+                    aria-label={`Edit ${user.name}`}
                   >
                     <Pencil size={18} />
                   </button>
@@ -201,6 +249,7 @@ export default function UsersPage() {
                   <button
                     onClick={() => setUserToDelete(user)}
                     className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                    aria-label={`Delete ${user.name}`}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -220,76 +269,24 @@ export default function UsersPage() {
       </div>
 
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="text-xl font-bold text-white">
-              {editingUser ? 'Edit User' : 'Add User'}
-            </h3>
-
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Name"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
-              />
-
-              <input
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="Email"
-                type="email"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
-              />
-
-              {!editingUser && (
-                <input
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  placeholder="Password"
-                  type="password"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                />
-              )}
-
-              <select
-                value={form.role}
-                onChange={(e) =>
-                  setForm({ ...form, role: e.target.value as UserRole })
-                }
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
-              >
-                <option value="ADMIN">ADMIN</option>
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-              </select>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-xl border border-slate-700 px-5 py-2 text-slate-300 hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  disabled={isSaving}
-                  className="rounded-xl bg-emerald-500 px-5 py-2 font-semibold text-slate-950 disabled:opacity-60"
-                >
-                  {editingUser
-                    ? updateMutation.isPending
-                      ? 'Updating...'
-                      : 'Update User'
-                    : createMutation.isPending
-                      ? 'Saving...'
-                      : 'Save User'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <UserModal
+          title={editingUser ? 'Edit User' : 'Add User'}
+          subtitle={
+            editingUser
+              ? `Updating "${editingUser.name}"`
+              : 'Create a new admin account'
+          }
+          onClose={resetForm}
+        >
+          <UserForm
+            values={form}
+            isEditing={Boolean(editingUser)}
+            isSubmitting={isSaving}
+            onChange={setForm}
+            onCancel={resetForm}
+            onSubmit={handleSubmit}
+          />
+        </UserModal>
       )}
 
       <DeleteUserDialog
