@@ -179,93 +179,89 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900">
-        <DataTable minWidthClass="min-w-[720px]">
-          <thead className="bg-slate-950 text-left text-sm text-slate-400">
-            <tr>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Role</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Created</th>
-              <th className="px-4 py-3 text-right xl:px-6 xl:py-4">Actions</th>
-            </tr>
-          </thead>
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        {isLoading && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            Loading users...
+          </div>
+        )}
 
-          <tbody>
-            {isLoading && (
+        {isError && (
+          <div className="p-6 text-center text-red-400 sm:p-10">
+            Failed to load users.
+          </div>
+        )}
+
+        {!isLoading && !isError && (data?.length ?? 0) === 0 && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            No users found.
+          </div>
+        )}
+
+        {!isLoading && !isError && (data?.length ?? 0) > 0 && (
+          <DataTable minWidthClass="min-w-[720px]">
+            <thead className="bg-slate-950 text-left text-sm text-slate-400">
               <tr>
-                <td colSpan={6} className="py-10 text-center text-slate-400">
-                  Loading users...
-                </td>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Role</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Created</th>
+                <th className="px-4 py-3 text-right xl:px-6 xl:py-4">Actions</th>
               </tr>
-            )}
+            </thead>
 
-            {isError && (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-red-400">
-                  Failed to load users.
-                </td>
-              </tr>
-            )}
+            <tbody>
+              {data?.map((user) => (
+                <tr key={user.id} className="border-t border-slate-800 text-sm text-slate-300">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-white xl:px-6 xl:py-4">
+                    {user.name}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {user.email}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {user.role}
+                  </td>
 
-            {data?.map((user) => (
-              <tr key={user.id} className="border-t border-slate-800 text-sm">
-                <td className="whitespace-nowrap px-4 py-3 font-medium text-white xl:px-6 xl:py-4">
-                  {user.name}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
-                  {user.email}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
-                  {user.role}
-                </td>
+                  <td className="px-4 py-3 xl:px-6 xl:py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        user.isActive
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : 'bg-red-500/10 text-red-400'
+                      }`}
+                    >
+                      {user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
 
-                <td className="px-4 py-3 xl:px-6 xl:py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs ${
-                      user.isActive
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-red-500/10 text-red-400'
-                    }`}
-                  >
-                    {user.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
 
-                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
+                  <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
+                    <button
+                      onClick={() => openEdit(user)}
+                      className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+                      aria-label={`Edit ${user.name}`}
+                    >
+                      <Pencil size={18} />
+                    </button>
 
-                <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
-                  <button
-                    onClick={() => openEdit(user)}
-                    className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
-                    aria-label={`Edit ${user.name}`}
-                  >
-                    <Pencil size={18} />
-                  </button>
-
-                  <button
-                    onClick={() => setUserToDelete(user)}
-                    className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
-                    aria-label={`Delete ${user.name}`}
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {!isLoading && data?.length === 0 && (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-slate-400">
-                  No users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </DataTable>
+                    <button
+                      onClick={() => setUserToDelete(user)}
+                      className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                      aria-label={`Delete ${user.name}`}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+        )}
       </div>
 
       {isCreateOpen && (

@@ -187,7 +187,7 @@ export default function BookingsPage() {
         </select>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900">
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         {isLoading && (
           <div className="p-6 text-center text-slate-400 sm:p-10">
             Loading bookings...

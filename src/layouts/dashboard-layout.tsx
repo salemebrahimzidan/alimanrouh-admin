@@ -222,8 +222,8 @@ function DashboardHome({ onNavigate }: DashboardHomeProps) {
       </div>
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-800 bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4 sm:px-6">
+        <section className="flex max-h-112 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+          <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-4 py-4 sm:px-6">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-sky-500/10 p-2 text-sky-400">
                 <CalendarCheck size={18} />
@@ -243,7 +243,7 @@ function DashboardHome({ onNavigate }: DashboardHomeProps) {
             </button>
           </div>
 
-          <div className="space-y-3 p-4 sm:p-6">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-6">
             {isLoading && (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -312,8 +312,8 @@ function DashboardHome({ onNavigate }: DashboardHomeProps) {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4 sm:px-6">
+        <section className="flex max-h-112 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+          <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-4 py-4 sm:px-6">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-amber-500/10 p-2 text-amber-400">
                 <MessageSquare size={18} />
@@ -333,7 +333,7 @@ function DashboardHome({ onNavigate }: DashboardHomeProps) {
             </button>
           </div>
 
-          <div className="space-y-3 p-4 sm:p-6">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-6">
             {isLoading && (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (

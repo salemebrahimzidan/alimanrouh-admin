@@ -73,127 +73,108 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900">
-        <DataTable minWidthClass="min-w-[760px]">
-          <thead className="bg-slate-950 text-left text-sm text-slate-400">
-            <tr>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Phone</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
-              <th className="px-4 py-3 xl:px-6 xl:py-4">Date</th>
-              <th className="px-4 py-3 text-right xl:px-6 xl:py-4">
-                Actions
-              </th>
-            </tr>
-          </thead>
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        {isLoading && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            Loading messages...
+          </div>
+        )}
 
-          <tbody>
-            {isLoading && (
+        {isError && (
+          <div className="p-6 text-center text-red-400 sm:p-10">
+            Failed to load messages.
+          </div>
+        )}
+
+        {!isLoading && !isError && (data?.data.length ?? 0) === 0 && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            No messages found.
+          </div>
+        )}
+
+        {!isLoading && !isError && (data?.data.length ?? 0) > 0 && (
+          <DataTable minWidthClass="min-w-[760px]">
+            <thead className="bg-slate-950 text-left text-sm text-slate-400">
               <tr>
-                <td
-                  colSpan={6}
-                  className="py-10 text-center text-slate-400"
-                >
-                  Loading...
-                </td>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Phone</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Date</th>
+                <th className="px-4 py-3 text-right xl:px-6 xl:py-4">
+                  Actions
+                </th>
               </tr>
-            )}
+            </thead>
 
-            {isError && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="py-10 text-center text-red-400"
+            <tbody>
+              {data?.data.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-t border-slate-800 text-sm text-slate-300"
                 >
-                  Failed to load messages
-                </td>
-              </tr>
-            )}
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-white xl:px-6 xl:py-4">
+                    {item.name}
+                  </td>
 
-            {data?.data.map((item) => (
-              <tr
-                key={item.id}
-                className="border-t border-slate-800"
-              >
-                <td className="whitespace-nowrap px-4 py-3 text-white xl:px-6 xl:py-4">
-                  {item.name}
-                </td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {item.email}
+                  </td>
 
-                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
-                  {item.email}
-                </td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {item.phone || '-'}
+                  </td>
 
-                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
-                  {item.phone || '-'}
-                </td>
-
-                <td className="px-4 py-3 xl:px-6 xl:py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs ${
-                      item.isRead
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-yellow-500/10 text-yellow-400'
-                    }`}
-                  >
-                    {item.isRead ? 'Read' : 'Unread'}
-                  </span>
-                </td>
-
-                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </td>
-
-                <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
-                  {!item.isRead && (
-                    <button
-                      onClick={() =>
-                        readMutation.mutate(item.id)
-                      }
-                      className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+                  <td className="px-4 py-3 xl:px-6 xl:py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        item.isRead
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : 'bg-yellow-500/10 text-yellow-400'
+                      }`}
                     >
-                      <Eye size={18} />
+                      {item.isRead ? 'Read' : 'Unread'}
+                    </span>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </td>
+
+                  <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
+                    {!item.isRead && (
+                      <button
+                        onClick={() => readMutation.mutate(item.id)}
+                        className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => deleteMutation.mutate(item.id)}
+                      className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                    >
+                      <Trash2 size={18} />
                     </button>
-                  )}
-
-                  <button
-                    onClick={() =>
-                      deleteMutation.mutate(item.id)
-                    }
-                    className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {!isLoading &&
-              data?.data.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-10 text-center text-slate-400"
-                  >
-                    No messages found.
                   </td>
                 </tr>
-              )}
-          </tbody>
-        </DataTable>
+              ))}
+            </tbody>
+          </DataTable>
+        )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between text-slate-400">
-        <p>
-          Page {data?.meta.page ?? page} of{' '}
-          {data?.meta.totalPages ?? 1}
+      <div className="mt-6 flex flex-col gap-4 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-base">
+        <p className="text-center sm:text-left">
+          Page {data?.meta.page ?? page} of {data?.meta.totalPages ?? 1}
         </p>
 
         <div className="flex gap-3">
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40"
+            className="flex-1 rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40 sm:flex-none"
           >
             Previous
           </button>
@@ -201,7 +182,7 @@ export default function MessagesPage() {
           <button
             disabled={page >= (data?.meta.totalPages ?? 1)}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40"
+            className="flex-1 rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40 sm:flex-none"
           >
             Next
           </button>
