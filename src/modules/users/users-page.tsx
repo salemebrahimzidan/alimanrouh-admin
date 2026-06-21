@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { DataTable } from '../../components/data-table';
 import DeleteUserDialog from './components/delete-user-dialog';
 import {
   createUser,
@@ -131,16 +132,16 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <table className="w-full">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900">
+        <DataTable minWidthClass="min-w-[720px]">
           <thead className="bg-slate-950 text-left text-sm text-slate-400">
             <tr>
-              <th className="px-6 py-4">Name</th>
-              <th className="px-6 py-4">Email</th>
-              <th className="px-6 py-4">Role</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Created</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Role</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Created</th>
+              <th className="px-4 py-3 text-right xl:px-6 xl:py-4">Actions</th>
             </tr>
           </thead>
 
@@ -163,11 +164,17 @@ export default function UsersPage() {
 
             {data?.map((user) => (
               <tr key={user.id} className="border-t border-slate-800 text-sm">
-                <td className="px-6 py-4 font-medium text-white">{user.name}</td>
-                <td className="px-6 py-4 text-slate-300">{user.email}</td>
-                <td className="px-6 py-4 text-slate-300">{user.role}</td>
+                <td className="whitespace-nowrap px-4 py-3 font-medium text-white xl:px-6 xl:py-4">
+                  {user.name}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
+                  {user.email}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
+                  {user.role}
+                </td>
 
-                <td className="px-6 py-4">
+                <td className="px-4 py-3 xl:px-6 xl:py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs ${
                       user.isActive
@@ -179,11 +186,11 @@ export default function UsersPage() {
                   </span>
                 </td>
 
-                <td className="px-6 py-4 text-slate-300">
+                <td className="whitespace-nowrap px-4 py-3 text-slate-300 xl:px-6 xl:py-4">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
 
-                <td className="px-6 py-4 text-right">
+                <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
                   <button
                     onClick={() => openEdit(user)}
                     className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
@@ -209,7 +216,7 @@ export default function UsersPage() {
               </tr>
             )}
           </tbody>
-        </table>
+        </DataTable>
       </div>
 
       {isCreateOpen && (

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { DataTable } from '../../components/data-table';
 import {
   deleteMessage,
   markMessageAsRead,
@@ -72,16 +73,16 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <table className="w-full">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900">
+        <DataTable minWidthClass="min-w-[760px]">
           <thead className="bg-slate-950 text-left text-sm text-slate-400">
             <tr>
-              <th className="px-6 py-4">Name</th>
-              <th className="px-6 py-4">Email</th>
-              <th className="px-6 py-4">Phone</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4 text-right">
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Name</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Email</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Phone</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
+              <th className="px-4 py-3 xl:px-6 xl:py-4">Date</th>
+              <th className="px-4 py-3 text-right xl:px-6 xl:py-4">
                 Actions
               </th>
             </tr>
@@ -115,19 +116,19 @@ export default function MessagesPage() {
                 key={item.id}
                 className="border-t border-slate-800"
               >
-                <td className="px-6 py-4 text-white">
+                <td className="whitespace-nowrap px-4 py-3 text-white xl:px-6 xl:py-4">
                   {item.name}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
                   {item.email}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
                   {item.phone || '-'}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="px-4 py-3 xl:px-6 xl:py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs ${
                       item.isRead
@@ -139,11 +140,11 @@ export default function MessagesPage() {
                   </span>
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
                   {new Date(item.createdAt).toLocaleDateString()}
                 </td>
 
-                <td className="px-6 py-4 text-right">
+                <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
                   {!item.isRead && (
                     <button
                       onClick={() =>
@@ -179,7 +180,7 @@ export default function MessagesPage() {
                 </tr>
               )}
           </tbody>
-        </table>
+        </DataTable>
       </div>
 
       <div className="mt-6 flex items-center justify-between text-slate-400">
