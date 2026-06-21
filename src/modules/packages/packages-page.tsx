@@ -1,5 +1,5 @@
-import { Pencil, Search, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -9,10 +9,56 @@ import {
   updatePackage,
 } from './api/packages.api';
 import type { PackageItem } from './api/packages.api';
+import { DataTable } from '../../components/data-table';
 import DeletePackageDialog from './components/delete-package-dialog';
 import PackageForm from './components/package-form';
 import { usePackages } from './hooks/use-packages';
 import type { PackageFormValues } from './types';
+
+type PackageModalProps = {
+  title: string;
+  subtitle: string;
+  onClose: () => void;
+  children: ReactNode;
+};
+
+function PackageModal({ title, subtitle, onClose, children }: PackageModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="Close dialog"
+      />
+
+      <div className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-slate-800 bg-slate-900 shadow-2xl sm:max-w-xl sm:rounded-2xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-800 bg-slate-900 px-5 py-5 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-400">
+              <Package size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white sm:text-xl">{title}</h3>
+              <p className="mt-0.5 text-sm text-slate-400">{subtitle}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function PackagesPage() {
   const [page, setPage] = useState(1);
@@ -114,12 +160,35 @@ export default function PackagesPage() {
     return `https://alimanrouh-api-production.up.railway.app${path}`;
   }
 
+  function renderPackageImage(item: PackageItem, className: string) {
+    if (item.imageUrl) {
+      return (
+        <img
+          src={getImageUrl(item.imageUrl)}
+          alt={item.title}
+          className={className}
+        />
+      );
+    }
+
+    return (
+      <div
+        className={`flex items-center justify-center rounded-lg bg-slate-800 text-xs text-slate-500 ${className}`}
+      >
+        No image
+      </div>
+    );
+  }
+
+  const packages = data?.data ?? [];
+  const totalPages = data?.meta?.totalPages ?? 1;
+
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-white">Packages</h2>
-          <p className="mt-2 text-slate-400">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between lg:items-center">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-bold text-white sm:text-3xl">Packages</h2>
+          <p className="mt-1 text-sm text-slate-400 sm:mt-2 sm:text-base">
             Manage Umrah and travel packages.
           </p>
         </div>
@@ -127,18 +196,16 @@ export default function PackagesPage() {
         <button
           onClick={() => {
             setPackageToEdit(null);
-          
             setIsCreateOpen(true);
           }}
-          className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
+          className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-emerald-400 sm:w-auto sm:text-base"
         >
-           <h3 className="text-xl font-bold text-white">
-  {packageToEdit ? 'Edit Package' : 'Add Package'}
-</h3>
-          </button>
+          <Plus size={18} />
+          Add Package
+        </button>
       </div>
 
-      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+      <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:p-4">
         <div className="relative flex-1">
           <Search
             size={18}
@@ -152,78 +219,71 @@ export default function PackagesPage() {
               setPage(1);
             }}
             placeholder="Search packages..."
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-white outline-none focus:border-emerald-500"
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 py-2.5 pl-11 pr-4 text-sm text-white outline-none focus:border-emerald-500 sm:py-3 sm:text-base"
           />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <table className="w-full">
-          <thead className="bg-slate-950 text-left text-sm text-slate-400">
-            <tr>
-              <th className="px-6 py-4">Image</th>
-              <th className="px-6 py-4">Title</th>
-              <th className="px-6 py-4">Price</th>
-              <th className="px-6 py-4">Duration</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
+      <div className="rounded-2xl border border-slate-800 bg-slate-900">
+        {isLoading && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            Loading packages...
+          </div>
+        )}
 
-          <tbody>
-            {isLoading && (
+        {isError && (
+          <div className="p-6 text-center text-red-400 sm:p-10">
+            Failed to load packages.
+          </div>
+        )}
+
+        {!isLoading && !isError && packages.length === 0 && (
+          <div className="p-6 text-center text-slate-400 sm:p-10">
+            No packages found.
+          </div>
+        )}
+
+        {!isLoading && !isError && packages.length > 0 && (
+          <DataTable minWidthClass="min-w-[760px]">
+            <thead className="bg-slate-950 text-left text-sm text-slate-400">
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-10 text-center text-slate-400"
-                >
-                  Loading packages...
-                </td>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Image</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Title</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Price</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Duration</th>
+                <th className="px-4 py-3 xl:px-6 xl:py-4">Status</th>
+                <th className="px-4 py-3 text-right xl:px-6 xl:py-4">
+                  Actions
+                </th>
               </tr>
-            )}
+            </thead>
 
-            {isError && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-10 text-center text-red-400"
-                >
-                  Failed to load packages.
-                </td>
-              </tr>
-            )}
-
-            {!isLoading &&
-              data?.data?.map((item) => (
+            <tbody>
+              {packages.map((item) => (
                 <tr
                   key={item.id}
                   className="border-t border-slate-800 text-sm text-slate-300"
                 >
-                  <td className="px-6 py-4">
-                    {item.imageUrl ? (
-                      <img
-                        src={getImageUrl(item.imageUrl)}
-                        alt={item.title}
-                        className="h-14 w-20 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-14 w-20 items-center justify-center rounded-lg bg-slate-800 text-xs text-slate-500">
-                        No image
-                      </div>
+                  <td className="px-4 py-3 xl:px-6 xl:py-4">
+                    {renderPackageImage(
+                      item,
+                      'h-14 w-20 rounded-lg object-cover',
                     )}
                   </td>
 
-                  <td className="px-6 py-4 font-medium text-white">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-white xl:px-6 xl:py-4">
                     {item.title}
                   </td>
 
-                  <td className="px-6 py-4">{item.price} SAR</td>
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
+                    {item.price} SAR
+                  </td>
 
-                  <td className="px-6 py-4">
+                  <td className="whitespace-nowrap px-4 py-3 xl:px-6 xl:py-4">
                     {item.duration ? `${item.duration} days` : '-'}
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 xl:px-6 xl:py-4">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-medium ${
                         item.isActive
@@ -235,57 +295,48 @@ export default function PackagesPage() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 text-right">
-                  <button
-  onClick={() => setPackageToEdit(item)}
-  className="mr-3 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
->
+                  <td className="px-4 py-3 text-right xl:px-6 xl:py-4">
+                    <button
+                      onClick={() => setPackageToEdit(item)}
+                      className="mr-2 rounded-lg p-2 text-emerald-400 hover:bg-emerald-500/10"
+                      aria-label={`Edit ${item.title}`}
+                    >
                       <Pencil size={18} />
                     </button>
 
                     <button
                       onClick={() => setPackageToDelete(item)}
                       className="rounded-lg p-2 text-red-400 hover:bg-red-500/10"
+                      aria-label={`Delete ${item.title}`}
                     >
                       <Trash2 size={18} />
                     </button>
                   </td>
                 </tr>
               ))}
-
-            {!isLoading && data?.data?.length === 0 && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-10 text-center text-slate-400"
-                >
-                  No packages found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </tbody>
+          </DataTable>
+        )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between text-slate-400">
-        <p>
-          Page {data?.meta?.page ?? page} of{' '}
-          {data?.meta?.totalPages ?? 1}
+      <div className="mt-6 flex flex-col gap-4 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-base">
+        <p className="text-center sm:text-left">
+          Page {data?.meta?.page ?? page} of {totalPages}
         </p>
 
         <div className="flex gap-3">
           <button
             disabled={page <= 1}
             onClick={() => setPage((value) => value - 1)}
-            className="rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40"
+            className="flex-1 rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40 sm:flex-none"
           >
             Previous
           </button>
 
           <button
-            disabled={page >= (data?.meta?.totalPages ?? 1)}
+            disabled={page >= totalPages}
             onClick={() => setPage((value) => value + 1)}
-            className="rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40"
+            className="flex-1 rounded-lg border border-slate-700 px-4 py-2 disabled:opacity-40 sm:flex-none"
           >
             Next
           </button>
@@ -293,39 +344,41 @@ export default function PackagesPage() {
       </div>
 
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="text-xl font-bold text-white">Add Package</h3>
-
-            <PackageForm
-              onCancel={() => setIsCreateOpen(false)}
-              onSubmit={handleCreatePackage}
-              isSubmitting={createMutation.isPending}
-            />
-          </div>
-        </div>
+        <PackageModal
+          title="Add Package"
+          subtitle="Create a new travel or Umrah package"
+          onClose={() => setIsCreateOpen(false)}
+        >
+          <PackageForm
+            onCancel={() => setIsCreateOpen(false)}
+            onSubmit={handleCreatePackage}
+            isSubmitting={createMutation.isPending}
+            submitLabel="Create Package"
+          />
+        </PackageModal>
       )}
-      {packageToEdit && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-    <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6">
-      <h3 className="text-xl font-bold text-white">Edit Package</h3>
 
-      <PackageForm
-        initialValues={{
-          title: packageToEdit.title,
-          description: packageToEdit.description,
-          price: Number(packageToEdit.price),
-          duration: packageToEdit.duration ?? undefined,
-          isActive: packageToEdit.isActive,
-        }}
-        submitLabel="Update Package"
-        onCancel={() => setPackageToEdit(null)}
-        onSubmit={handleUpdatePackage}
-        isSubmitting={updateMutation.isPending}
-      />
-    </div>
-  </div>
-)}
+      {packageToEdit && (
+        <PackageModal
+          title="Edit Package"
+          subtitle={`Updating "${packageToEdit.title}"`}
+          onClose={() => setPackageToEdit(null)}
+        >
+          <PackageForm
+            initialValues={{
+              title: packageToEdit.title,
+              description: packageToEdit.description,
+              price: Number(packageToEdit.price),
+              duration: packageToEdit.duration ?? undefined,
+              isActive: packageToEdit.isActive,
+            }}
+            submitLabel="Update Package"
+            onCancel={() => setPackageToEdit(null)}
+            onSubmit={handleUpdatePackage}
+            isSubmitting={updateMutation.isPending}
+          />
+        </PackageModal>
+      )}
 
       <DeletePackageDialog
         packageItem={packageToDelete}
