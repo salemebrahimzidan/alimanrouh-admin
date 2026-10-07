@@ -14,6 +14,10 @@ body {
   min-height: 100vh;
 }
 
+[lang='ar'] {
+  font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+}
+
 #root {
   min-height: 100vh;
 }

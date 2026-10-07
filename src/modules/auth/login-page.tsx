@@ -2,8 +2,10 @@ import { useState } from 'react';
 import {
   ArrowRight,
   CalendarCheck,
+  Check,
   Eye,
   EyeOff,
+  Languages,
   Loader2,
   Lock,
   Mail,
@@ -14,6 +16,12 @@ import { toast } from 'sonner';
 
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/auth.store';
+import {
+  LOGIN_LANGUAGE_KEY,
+  loginCopy,
+  readLoginLanguage,
+  type LoginLanguage,
+} from './login-copy';
 
 type LoginResponse = {
   accessToken?: string;
@@ -27,19 +35,71 @@ type LoginResponse = {
   };
 };
 
-const features = [
-  { icon: Package, label: 'Manage travel packages' },
-  { icon: CalendarCheck, label: 'Track bookings in real time' },
-  { icon: Shield, label: 'Secure admin access' },
+const featureIcons = [Package, CalendarCheck, Shield];
+
+const languageOptions: Array<{ id: LoginLanguage; label: string }> = [
+  { id: 'ar', label: 'العربية' },
+  { id: 'en', label: 'English' },
 ];
+
+const inputClassName =
+  'w-full rounded-lg border border-slate-200 bg-white py-3 ps-11 pe-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1a5276] focus:ring-4 focus:ring-[#1a5276]/10';
+
+function LanguageSwitcher({
+  language,
+  label,
+  onChange,
+}: {
+  language: LoginLanguage;
+  label: string;
+  onChange: (language: LoginLanguage) => void;
+}) {
+  return (
+    <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
+      <span className="inline-flex items-center gap-1.5 px-2 text-slate-500">
+        <Languages className="h-3.5 w-3.5" aria-hidden />
+        <span className="text-xs font-medium">{label}</span>
+      </span>
+      <div className="inline-flex overflow-hidden rounded-full" role="group">
+        {languageOptions.map((option) => {
+          const active = option.id === language;
+
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onChange(option.id)}
+              aria-pressed={active}
+              className={
+                active
+                  ? 'inline-flex items-center gap-1 rounded-full bg-[#12263a] px-2.5 py-1 text-xs font-medium text-white'
+                  : 'inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900'
+              }
+            >
+              {active ? <Check className="h-3 w-3" aria-hidden /> : null}
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function LoginPage() {
   const login = useAuthStore((state) => state.login);
 
+  const [language, setLanguage] = useState<LoginLanguage>(readLoginLanguage);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const copy = loginCopy[language];
+
+  function changeLanguage(next: LoginLanguage) {
+    setLanguage(next);
+    localStorage.setItem(LOGIN_LANGUAGE_KEY, next);
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,180 +118,184 @@ export function LoginPage() {
         data.token;
 
       if (!token) {
-        toast.error('Token not found');
+        toast.error(copy.tokenMissing);
         return;
       }
 
       login(token, data.user);
-      toast.success('Logged in successfully');
+      toast.success(copy.signedIn);
     } catch {
-      toast.error('Invalid email or password');
+      toast.error(copy.invalidCredentials);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-      >
-        <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-[28rem] w-[28rem] rounded-full bg-emerald-600/5 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-slate-700/20 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900/80 via-slate-950 to-slate-950" />
-      </div>
-
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-12">
-        <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/40 backdrop-blur-xl lg:grid-cols-2">
-          <section className="relative hidden flex-col justify-between border-r border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30 p-10 lg:flex">
-            <div>
-              <div className="mb-8 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-lg font-bold text-slate-950 shadow-lg shadow-emerald-500/20">
-                  IR
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-white">Al Iman Rouh</p>
-                  <p className="text-sm text-slate-400">Admin Panel</p>
-                </div>
-              </div>
-
-              <h1 className="text-3xl font-bold leading-tight text-white">
-                Welcome back
-              </h1>
-              <p className="mt-3 max-w-sm text-slate-400">
-                Sign in to manage packages, bookings, and customer messages from
-                one place.
-              </p>
-            </div>
-
-            <ul className="space-y-4">
-              {features.map(({ icon: Icon, label }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-3 text-sm text-slate-300"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
-                    <Icon size={16} />
-                  </span>
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="p-8 sm:p-10">
-            <div className="mb-8 lg:hidden">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-base font-bold text-slate-950">
-                  IR
-                </div>
-                <div>
-                  <p className="font-bold text-white">Al Iman Rouh</p>
-                  <p className="text-xs text-slate-400">Admin Panel</p>
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-white">Sign in</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Access your admin dashboard
-              </p>
-            </div>
-
-            <div className="mb-8 hidden lg:block">
-              <h2 className="text-2xl font-bold text-white">Sign in</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Enter your credentials to continue
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-medium text-slate-300"
-                >
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail
-                    size={18}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  />
-                  <input
-                    id="email"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-4 text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    type="email"
-                    placeholder="admin@alimanrouh.com"
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="mb-2 block text-sm font-medium text-slate-300"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock
-                    size={18}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  />
-                  <input
-                    id="password"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-11 pr-12 text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-500 transition hover:text-slate-300"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isLoading}
-                type="submit"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign in
-                    <ArrowRight
-                      size={18}
-                      className="transition group-hover:translate-x-0.5"
-                    />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <p className="mt-8 text-center text-xs text-slate-500">
-              Authorized personnel only. All activity is monitored.
-            </p>
-          </section>
+    <main
+      lang={language}
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      className="min-h-screen bg-[#f4f6f8] text-slate-900 lg:grid lg:grid-cols-2"
+    >
+      <section className="relative hidden min-h-screen flex-col bg-[#07131f] text-white lg:flex">
+        <div className="relative min-h-0 flex-1">
+          <img
+            src="/login-hero.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-[center_42%]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#07131f]/20 via-transparent to-[#07131f]"
+          />
         </div>
-      </div>
+
+        <div className="shrink-0 px-8 pb-8 xl:px-12 xl:pb-10">
+          <div className="max-w-md">
+            <p className="text-sm leading-6 text-slate-300">{copy.intro}</p>
+
+            <ul className="mt-6 space-y-4">
+              {copy.features.map(({ title, description }, index) => {
+                const Icon = featureIcons[index];
+
+                return (
+                  <li key={title} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-sky-100">
+                      <Icon size={16} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-white">
+                        {title}
+                      </span>
+                      <span className="mt-0.5 block text-sm leading-5 text-slate-300">
+                        {description}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="flex min-h-screen items-center justify-center bg-[#f4f6f8] px-4 py-10 sm:px-8">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 lg:hidden">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#12263a] text-sm font-bold text-white">
+                IR
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{copy.brand}</p>
+                <p className="text-xs text-slate-500">{copy.admin}</p>
+              </div>
+            </div>
+
+            <div className="ms-auto">
+              <LanguageSwitcher
+                language={language}
+                label={copy.language}
+                onChange={changeLanguage}
+              />
+            </div>
+          </div>
+
+          <p
+            className={`text-xs font-medium text-[#1a5276] ${
+              language === 'en' ? 'uppercase tracking-[0.18em]' : ''
+            }`}
+          >
+            {copy.signInEyebrow}
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            {copy.welcome}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{copy.formIntro}</p>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                {copy.email}
+              </label>
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  id="email"
+                  className={inputClassName}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  type="email"
+                  placeholder="admin@alimanrouh.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                {copy.password}
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  id="password"
+                  className={`${inputClassName} pe-11`}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={copy.passwordPlaceholder}
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#12263a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1a3a56] focus:outline-none focus:ring-4 focus:ring-[#12263a]/15 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isLoading}
+              type="submit"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  {copy.signingIn}
+                </>
+              ) : (
+                <>
+                  {copy.signIn}
+                  <ArrowRight size={16} className="rtl:-scale-x-100" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="mt-8 border-t border-slate-200 pt-6 text-center text-xs leading-5 text-slate-400">
+            {copy.notice}
+          </p>
+        </div>
+      </section>
     </main>
   );
 }
